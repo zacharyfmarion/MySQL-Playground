@@ -1,0 +1,214 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../../../www/lib/polymer/polymer.html">
+
+<dom-module id="mysql-test">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+      /* Because hidden$= doesn't work with vaaden */
+      .hidden{
+        display: none;
+      }
+
+      #console{
+        width: auto !important;
+        margin: 15px 0;
+      }
+      #result{
+        padding: 10px;
+        background: rgba(200, 200, 200, 0.5);
+      }
+      vaadin-grid {
+        margin-top: 20px;
+      /*   max-height: 500px; */
+      }
+      #close-btn{
+        background-color: var(--default-primary-color);
+        color: #fff;
+      }
+      .container{
+        padding: 20px;
+      }
+    </style>
+    <!-- Entering the query -->
+    <div class = "fullbleed layout vertical container" >
+      <div class = "layout vertical">
+        <iron-autogrow-textarea id = "console" rows = "15" value = "{{query}}" class = "flex"></iron-autogrow-textarea>
+        <div class="layout horizontal">
+          <paper-button id = "run-btn" on-click = "runCommand" class = "flex" raised>Run command</paper-button>
+          <paper-button id = "close-btn" on-click = "_closeConnection" raised>Close Connection</paper-button>
+        </div>
+      </div>
+      <!-- Where the results of the query go -->
+      <!-- <pre id = "result" class = "flex">[[resultStr]]</pre> -->
+      <vaadin-grid id = "dataTable" class = "hidden" selection-mode="multi"
+                                    items = "[[resultObj]]">
+        <table>
+          <!-- Define the columns and their mapping to data properties. -->
+          <template is="dom-repeat" items = "dataCols" as "column">
+            <col name = "{{column}}">
+          </template>
+
+          <!-- Define the column headings. -->
+          <thead>
+            <tr>
+              <template is="dom-repeat" items = "dataCols" as "column">
+                <th>{{column}}</th>
+              </template>
+            </tr>
+          </thead>
+        </table>
+      </vaadin-grid>
+
+    </div>
+
+  </template>
+  <script>
+  (function() {
+    'use strict';
+
+    Polymer({
+      is: 'mysql-test',
+
+      properties: {
+        /* module to interact with mysql */
+        mysql: {
+          type: Object,
+          value: () => {
+            return require('mysql');
+          }
+        },
+        /* The query to be entered into the database */
+        query: {
+          type: String
+        },
+
+        /* Resuly of the query */
+        resultStr: {
+          type: String
+        },
+
+        resultObj: {
+          type: Object
+        },
+
+        dataCols: {
+          type: Array,
+          value: () => {
+            return []
+          }
+        },
+
+        /* Result fields to be used as headers */
+        resultFields: {
+          type: Array
+        },
+
+        /* Name of the database to connect to */
+        database: {
+          type: String
+        },
+        /* Allow the execution of mutliple statements */
+        multipleStatements: {
+          type: Boolean,
+          value: 'false'
+        },
+
+        /* Path to the mysql socket being used */
+        socketPath: {
+          type: String,
+          value: "/Applications/MAMP/tmp/mysql/mysql.sock"
+        },
+
+        /* connection object created by mysql */
+        connection: {
+          type: Object
+        }
+      },
+
+      ready: function(){
+        // set up a connection
+        this._connect();
+      },
+
+      /* Run the actual query */
+      runCommand: function(){
+        this.queryDatabase(this.query);
+      },
+
+      /** Query the database (exposed as a public function)
+        * @param {String} The query to pass into the database
+      **/
+      queryDatabase: function(query_str){
+        var _this = this;
+        this.connection.query(query_str, function(err, rows, fields) {
+          if (err) throw err;
+          _this.resultObj = rows;
+          _this.resultFields = fields;
+          _this.resultStr = JSON.stringify(rows, null, 4);
+          _this._getDataCols();
+        });
+      },
+
+      /* Getter method for the mysql connection */
+      getConnection: function(){
+        return this.connection;
+      },
+
+      /** Connect to the database */
+      _connect: function(){
+        var _this = this;
+        this.connection = this.mysql.createConnection({
+          user : 'root',
+          password : "root",
+          multipleStatements: _this.multipleStatements,
+          socketPath : _this.socketPath,
+          database : _this.database
+        });
+        // connect to the table
+        this.connection.connect(function(err) {
+          if (err) {
+            console.error('error connecting: ' + err.stack);
+            return;
+          }
+          console.log('connected as id ' + _this.connection.threadId);
+        });
+      },
+
+      _closeConnection: function(){
+        this.connection.end();
+      },
+
+      _getDataCols: function(){
+        if (this.resultObj){
+          // remove previous cols
+          for (i in this.dataCols){
+            this.$.dataTable.removeColumn(this.dataCols[i]);
+          }
+
+          let row = this.resultObj[0];
+          this.splice('dataCols', 0, this.dataCols.length);
+          this.push('dataCols', ...Object.keys(row));
+          for (i in this.dataCols){
+            this.$.dataTable.addColumn({name: this.dataCols[i]});
+          }
+          // unhide the result
+          this.$.dataTable.classList.remove('hidden');
+        }
+      }
+
+    });
+  })();
+  </script>
+</dom-module>

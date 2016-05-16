@@ -1,0 +1,89 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../../../www/lib/polymer/polymer.html">
+
+<dom-module id="database-tables">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+      vaadin-grid{
+        height: 100%;
+      }
+    </style>
+
+    <vaadin-grid id = "dataTable" selection-mode="multi"
+                                  items = "[[rows]]"
+                                  visible-rows="10">
+      <table>
+        <!-- Define the columns and their mapping to data properties. -->
+        <col name="Tables_in_tsugi">
+
+        <!-- Define the column headings. -->
+        <thead>
+          <tr>
+            <th>Table Name</th>
+          </tr>
+        </thead>
+      </table>
+    </vaadin-grid>
+
+  </template>
+  <script>
+  (function() {
+    'use strict';
+
+    Polymer({
+      is: 'database-tables',
+
+      properties: {
+        /* Connection to the msql db */
+        connection: {
+          type: Object
+        },
+
+        rows: {
+          type: Object
+        },
+
+        tables: {
+          type: Array
+        }
+      },
+
+      attached: function(){
+        this.getTables();
+      },
+
+      getTables: function(){
+        let _this = this;
+        this.connection.query('SHOW TABLES', (err, rows, fields) => {
+          if (err) throw err;
+          _this.rows = rows;
+          _this.tables = _this._encodeRowsAsArray(rows);
+        })
+      },
+
+      /* Private functions */
+      _encodeRowsAsArray: function(rows){
+        let res = [];
+        // iterate over each row in the array
+        rows.forEach(({Tables_in_tsugi}) => {
+          res.push(Tables_in_tsugi);
+        })
+        return res;
+      }
+
+    });
+  })();
+  </script>
+</dom-module>

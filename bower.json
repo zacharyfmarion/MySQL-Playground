@@ -1,0 +1,18 @@
+{
+  "name": "polymer-starter-kit",
+  "private": true,
+  "dependencies": {
+    "iron-elements": "PolymerElements/iron-elements#1.0.0",
+    "paper-elements": "PolymerElements/paper-elements#1.0.1",
+    "platinum-elements": "PolymerElements/platinum-elements#1.0.1",
+    "neon-elements": "PolymerElements/neon-elements#1.0.0",
+    "page": "visionmedia/page.js#~1.6.3",
+    "iron-autogrow-textarea": "PolymerElements/iron-autogrow-textarea#~1.0.12",
+    "paper-button": "PolymerElements/paper-button#~1.0.11",
+    "paper-tabs": "PolymerElements/paper-tabs#~1.5.0",
+    "paper-scroll-header-panel": "PolymerElements/paper-scroll-header-panel#~1.0.15",
+    "paper-tooltip": "PolymerElements/paper-tooltip#~1.1.2",
+    "vaadin-grid": "~1.0.0"
+  },
+  "devDependencies": {}
+}
