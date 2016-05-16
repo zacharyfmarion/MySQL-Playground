@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "mySQL playground",
+  "name": "mysql-playground",
   "version": "0.1.0",
   "main": "app/entry.js",
   "devDependencies": {
