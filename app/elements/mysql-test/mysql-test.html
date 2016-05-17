@@ -21,30 +21,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         display: none;
       }
 
-      #console{
-        width: auto !important;
-        margin: 15px 0;
+      #editor{
+        margin: 0 0 15px 0;
+        border-bottom: 2px solid var(--default-primary-color);
       }
       #result{
         padding: 10px;
         background: rgba(200, 200, 200, 0.5);
       }
       vaadin-grid {
+        border-top: 2px solid var(--default-primary-color);
         margin-top: 20px;
       /*   max-height: 500px; */
+      }
+      #run-btn{
+        border: 2px solid var(--light-primary-color);
       }
       #close-btn{
         background-color: var(--default-primary-color);
         color: #fff;
       }
       .container{
-        padding: 20px;
+        /*padding: 20px;*/
       }
     </style>
     <!-- Entering the query -->
     <div class = "fullbleed layout vertical container" >
       <div class = "layout vertical">
-        <iron-autogrow-textarea id = "console" rows = "15" value = "{{query}}" class = "flex"></iron-autogrow-textarea>
+        <ace-editor id = "editor"></ace-editor>
         <div class="layout horizontal">
           <paper-button id = "run-btn" on-click = "runCommand" class = "flex" raised>Run command</paper-button>
           <paper-button id = "close-btn" on-click = "_closeConnection" raised>Close Connection</paper-button>
@@ -144,6 +148,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       /* Run the actual query */
       runCommand: function(){
+        this.query = this.$.editor.getValue();
         this.queryDatabase(this.query);
       },
 

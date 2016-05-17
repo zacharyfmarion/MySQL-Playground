@@ -1,0 +1,68 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../../../www/lib/polymer/polymer.html">
+<!-- Ace editor -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.3/ace.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.3/mode-mysql.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.3/snippets/mysql.js"></script>
+<!-- THEMING -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.3/theme-monokai.js"></script>
+
+<dom-module id="ace-editor">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+      #editor{
+        height: 300px;
+        font-size: 16px;
+      }
+    </style>
+    <div id = "editor"></div>
+  </template>
+  <script>
+  (function() {
+    'use strict';
+
+    Polymer({
+      is: 'ace-editor',
+
+      properties: {
+        editor: {
+          type: Object
+        },
+        code: {
+          type: String
+        }
+      },
+
+      ready: function(){
+        // create the editor
+        let editor = this.$.editor;
+        this.editor = ace.edit(editor);
+        // this.editor.setTheme("ace/theme/monokai");
+        this.editor.getSession().setMode("ace/mode/mysql");
+        // let _this = this;   // temp reference to this
+        // // update the binding
+        // this.editor.on('change', (e) =>{
+        //   _this.code = _this.editor.getValue();
+        // })
+      },
+
+      /* Get the current text contents of the editor */
+      getValue: function(){
+        return this.editor.getValue();
+      }
+    });
+  })();
+  </script>
+</dom-module>
