@@ -58,6 +58,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     #main-toolbar{
       height: var(--toolbar-height);
     }
+    @media (min-width: 601px){
+      #drawer.paper-drawer-panel > [drawer]:not([style-scope]):not(.style-scope){
+        border-right: 0;
+      }
+    }
+    #sideToolbar{
+      padding: 0;
+      margin: 0;
+      height: calc(var(--toolbar-height) - 48px);
+    }
     paper-tabs{
       background-color: var(--light-primary-color);
     }
@@ -80,8 +90,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     <paper-drawer-panel id = "drawerPanel" force-narrow>
       <!-- Sidebar -->
-      <paper-header-panel id = "side-panel" drawer>
-        <paper-toolbar>
+      <paper-header-panel id = "sidePanel" drawer>
+        <paper-toolbar id = "sideToolbar">
           <div class="title">Databases</div>
         </paper-toolbar>
         <paper-menu>
@@ -99,7 +109,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <paper-toolbar class = "medium-tall" id = "main-toolbar">
 
           <paper-icon-button icon="menu" paper-drawer-toggle></paper-icon-button>
-          <div class="title">Mysql Playground</div>
+          <div class="title">Mysql Playground - {{database}}</div>
           <paper-icon-button icon="info"      on-click="showAbout"></paper-icon-button>
           <paper-icon-button icon="refresh"   on-click="refresh"></paper-icon-button>
           <paper-icon-button icon="more-vert" on-click=""></paper-icon-button>
