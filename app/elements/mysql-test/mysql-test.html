@@ -131,6 +131,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
       },
 
+      /* Set value of the editor */
+      updateEditorContents: function(query){
+        this.$.editor.setValue(query);
+      },
+
       _getDataCols: function(){
         if (this.resultObj){
           // remove previous cols

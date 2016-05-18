@@ -181,6 +181,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         })
       });
 
+      // when a table is clicked open a query
+      $scope.$.tables.addEventListener('table-clicked', (e) => {
+        console.log(e.detail.name);
+      })
+
       // select the correct database based on the selection
       $scope.databaseSelected = function(e){
         // change the database
@@ -188,6 +193,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         // update the settings bindings
         $scope.database = e.model.db;
         $scope.$.drawerPanel.closeDrawer();
+      }
+
+      /** Execute a query and change to the query tab
+        * @param query {String} Query to be executed
+        **/
+      $scope.executeQuery = function(query){
+        // Query the database
+        $scope.$.query.updateEditorContents(query);
+        $scope.$.query.queryDatabase(query);
+        // select the query tab
+        this.selected = "query";
       }
 
       // helper function to get entries in result

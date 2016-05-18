@@ -65,6 +65,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       /* Get the current text contents of the editor */
       getValue: function(){
         return this.editor.getValue();
+      },
+
+      /* Set the value of the editor */
+      setValue: function(value){
+        this.editor.setValue(value, 1);
       }
     });
   })();
