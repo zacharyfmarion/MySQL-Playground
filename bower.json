@@ -13,7 +13,9 @@
     "paper-scroll-header-panel": "PolymerElements/paper-scroll-header-panel#~1.0.15",
     "paper-tooltip": "PolymerElements/paper-tooltip#~1.1.2",
     "vaadin-grid": "~1.0.0",
-    "vaadin-charts": "~3.0.0"
+    "vaadin-charts": "~3.0.0",
+    "paper-drawer-panel": "PolymerElements/paper-drawer-panel#~1.0.9",
+    "paper-menu": "PolymerElements/paper-menu#~1.2.2"
   },
   "devDependencies": {}
 }

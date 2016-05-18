@@ -7,5 +7,6 @@ This is a super basic app for querying a database. I wrote it this morning in a 
 - [ ] Add login modal to ask for username, password, connection, etc
 - [x] Add ace editor to query tab (as opposed to a textarea)
 - [ ] Migrate to ES6 (benefits of keeping es5 Polymer classes???)
-- [ ] add sidebar to choose between multiple databases
+- [ ] Add footer to table with options (drop/delete, alter, etc)
+- [x] add sidebar to choose between multiple databases
 - [ ] Add ability to click on table and automatically open query (e.g. `SELECT * FROM table_name`)

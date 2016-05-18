@@ -20,7 +20,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       .hidden{
         display: none;
       }
-
+      .editor{
+        z-index: 0;
+      }
       #editor{
         margin: 0 0 15px 0;
         border-bottom: 2px solid var(--default-primary-color);
@@ -48,7 +50,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <!-- Entering the query -->
     <div class = "fullbleed layout vertical container" >
       <div class = "layout vertical">
-        <ace-editor id = "editor"></ace-editor>
+        <ace-editor id = "editor" class = "editor"></ace-editor>
         <div class="layout horizontal">
           <paper-button id = "run-btn" on-click = "runCommand" class = "flex" raised>Run command</paper-button>
           <paper-button id = "close-btn" on-click = "_closeConnection" raised>Close Connection</paper-button>
@@ -57,24 +59,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <!-- Where the results of the query go -->
       <!-- <pre id = "result" class = "flex">[[resultStr]]</pre> -->
       <vaadin-grid id = "dataTable" class = "hidden" selection-mode="multi"
-                                    items = "[[resultObj]]">
+                                                     items = "[[resultObj]]">
         <table>
-          <!-- Define the columns and their mapping to data properties. -->
-          <template is="dom-repeat" items = "dataCols" as "column">
-            <col name = "{{column}}">
-          </template>
-
           <!-- Define the column headings. -->
           <thead>
-            <tr>
-              <template is="dom-repeat" items = "dataCols" as "column">
-                <th>{{column}}</th>
-              </template>
-            </tr>
           </thead>
+          <!-- Footer -->
+          <tfoot>
+            <tr>
+              <th colspan="2">Number of selected rows:
+                <span id="selected-counter">0</span>
+              </th>
+              <th>
+                <span id="total-score">total</span>
+              </th>
+            </tr>
+          </tfoot>
         </table>
       </vaadin-grid>
-
     </div>
 
   </template>
@@ -86,64 +88,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       is: 'mysql-test',
 
       properties: {
-        /* module to interact with mysql */
-        mysql: {
-          type: Object,
-          value: () => {
-            return require('mysql');
-          }
-        },
         /* The query to be entered into the database */
-        query: {
-          type: String
-        },
-
+        query: { type: String },
         /* Resuly of the query */
-        resultStr: {
-          type: String
-        },
-
-        resultObj: {
-          type: Object
-        },
-
+        resultStr: { type: String },
+        /* Object containing the result rows */
+        resultObj: { type: Object },
+        /* Data columns */
         dataCols: {
           type: Array,
           value: () => {
             return []
           }
         },
-
         /* Result fields to be used as headers */
-        resultFields: {
-          type: Array
-        },
-
-        /* Name of the database to connect to */
-        database: {
-          type: String
-        },
-        /* Allow the execution of mutliple statements */
-        multipleStatements: {
-          type: Boolean,
-          value: 'false'
-        },
-
-        /* Path to the mysql socket being used */
-        socketPath: {
-          type: String,
-          value: "/Applications/MAMP/tmp/mysql/mysql.sock"
-        },
-
+        resultFields: { type: Array },
         /* connection object created by mysql */
-        connection: {
-          type: Object
-        }
+        connection: { type: Object }
       },
 
       ready: function(){
-        // set up a connection
-        this._connect();
+
       },
 
       /* Run the actual query */
@@ -166,51 +131,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
       },
 
-      /* Getter method for the mysql connection */
-      getConnection: function(){
-        return this.connection;
-      },
-
-      /** Connect to the database */
-      _connect: function(){
-        var _this = this;
-        this.connection = this.mysql.createConnection({
-          user : 'root',
-          password : "root",
-          multipleStatements: _this.multipleStatements,
-          socketPath : _this.socketPath,
-          database : _this.database
-        });
-        // connect to the table
-        this.connection.connect(function(err) {
-          if (err) {
-            console.error('error connecting: ' + err.stack);
-            return;
-          }
-          console.log('connected as id ' + _this.connection.threadId);
-        });
-      },
-
-      _closeConnection: function(){
-        this.connection.end();
-      },
-
       _getDataCols: function(){
         if (this.resultObj){
           // remove previous cols
           for (i in this.dataCols){
             this.$.dataTable.removeColumn(this.dataCols[i]);
           }
-
           let row = this.resultObj[0];
           this.splice('dataCols', 0, this.dataCols.length);
           this.push('dataCols', ...Object.keys(row));
           for (i in this.dataCols){
-            this.$.dataTable.addColumn({name: this.dataCols[i]});
+            // insert col
+            this.$.dataTable.addColumn({name: this.dataCols[i], sortable: true, hidable: true});
           }
           // unhide the result
           this.$.dataTable.classList.remove('hidden');
         }
+      },
+
+      /* close the db connection */
+      _closeConnection: function(){
+        this.connection.end();
       }
 
     });

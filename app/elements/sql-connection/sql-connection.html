@@ -1,0 +1,124 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../../../www/lib/polymer/polymer.html">
+
+<dom-module id="sql-connection">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <div>Hello from <span>{{foo}}</span></div>
+  </template>
+  <script>
+  (function() {
+    'use strict';
+
+    Polymer({
+      is: 'sql-connection',
+
+      properties: {
+        /* module to interact with mysql */
+        mysql: {
+          type: Object,
+          value: () => {
+            return require('mysql');
+          }
+        },
+
+        user: {
+          type: String,
+          value: 'root'
+        },
+
+        password: {
+          type: String,
+          value: 'root'
+        },
+        /* Connection to the database */
+        connection: {
+          type: Object
+        },
+        /* Name of the database to connect to */
+        database: {
+          type: String
+        },
+        /* Allow the execution of mutliple statements */
+        multipleStatements: {
+          type: Boolean,
+          value: 'false'
+        },
+
+        /* Path to the mysql socket being used */
+        socketPath: {
+          type: String,
+          value: "/Applications/MAMP/tmp/mysql/mysql.sock"
+        }
+      },
+
+      /* Run when the component is ready */
+      ready: function(){
+        this.createConnection();
+        this.connect(); // ??
+      },
+
+      /** Create the database connection */
+      createConnection: function(){
+        var _this = this;
+        this.connection = this.mysql.createConnection({
+          user : _this.user,
+          password : _this.user,
+          multipleStatements: _this.multipleStatements,
+          socketPath : _this.socketPath
+        });
+      },
+
+      /* Getter method exposing the connection object */
+      getConnection: function(){
+        return this.connection;
+      },
+
+      /** Select a new database for use
+        * @param db {String} Name of the database to use
+        * @param user {String} Name of the user to change
+        * @param db {String} Name of the database to change
+        */
+      selectDatabase: function(db = this.db, user = this.user, password = this.password){
+        this.connection.changeUser({database : db, user, password}, function(err) {
+          if (err) throw err;
+        });
+      },
+
+      /** Connect to the database */
+      connect: function(){
+        let _this = this;
+        // connect to the table
+        this.connection.connect(function(err) {
+          if (err) {
+            console.error('error connecting: ' + err.stack);
+            return;
+          }
+          console.log('connected as id ' + _this.connection.threadId);
+          // fire a custom event saying the connection has been established
+          _this.fire('connected', {id: _this.connection.threadId});
+        });
+      },
+
+      /* Close the connection to the database */
+      closeConnection: function(){
+        this.connection.end();
+      }
+
+    });
+  })();
+  </script>
+</dom-module>

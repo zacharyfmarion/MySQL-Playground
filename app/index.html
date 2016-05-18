@@ -68,6 +68,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       padding: 0;
       background-color: var(--app-background-color);
     }
+    paper-item{
+      cursor: pointer;
+    }
   </style>
 </head>
 
@@ -75,40 +78,115 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <span id="browser-sync-binding"></span>
   <template is="dom-bind" id="app">
 
-    <paper-scroll-header-panel fixed>
-      <paper-toolbar class = "medium-tall" id = "main-toolbar">
+    <paper-drawer-panel force-narrow>
+      <!-- Sidebar -->
+      <paper-header-panel id = "side-panel" drawer>
+        <paper-toolbar>
+          <div class="title">Databases</div>
+        </paper-toolbar>
+        <paper-menu>
+          <paper-menu>
+            <iron-selector selected = "{{selectedDB}}" attr-for-selected="db">
+              <template is="dom-repeat" items = "[[databases]]" as = "db">
+                <paper-item db = "[[db]]" on-tap = "databaseSelected">[[db]]</paper-item>
+              </template>
+            </iron-selector>
+          </paper-menu>
+        </paper-menu>
+      </paper-header-panel>
+      <!-- Main app -->
+      <paper-scroll-header-panel class="flex" fixed main>
+        <paper-toolbar class = "medium-tall" id = "main-toolbar">
 
-        <paper-icon-button icon="menu" paper-drawer-toggle></paper-icon-button>
-        <div class="title">Mysql Playground</div>
-        <paper-icon-button icon="info"      on-click="showAbout"></paper-icon-button>
-        <paper-icon-button icon="refresh"   on-click="refresh"></paper-icon-button>
-        <paper-icon-button icon="more-vert" on-click=""></paper-icon-button>
+          <paper-icon-button icon="menu" paper-drawer-toggle></paper-icon-button>
+          <div class="title">Mysql Playground</div>
+          <paper-icon-button icon="info"      on-click="showAbout"></paper-icon-button>
+          <paper-icon-button icon="refresh"   on-click="refresh"></paper-icon-button>
+          <paper-icon-button icon="more-vert" on-click=""></paper-icon-button>
 
-        <!-- Tabs bar -->
-        <paper-tabs class = "bottom fit" selected="{{selected}}" attr-for-selected="name">
-          <paper-tab name = "tables">Tables</paper-tab>
-          <paper-tab name = "query">Query</paper-tab>
-          <!-- <paper-tab name = "schema">Schema</paper-tab> -->
-        </paper-tabs>
+          <!-- Tabs bar -->
+          <paper-tabs class = "bottom fit" selected="{{selected}}" attr-for-selected="name">
+            <paper-tab name = "tables">Tables</paper-tab>
+            <paper-tab name = "query">Query</paper-tab>
+            <!-- <paper-tab name = "schema">Schema</paper-tab> -->
+          </paper-tabs>
 
-      </paper-toolbar>
-      <!-- Actual app part -->
+        </paper-toolbar>
+        <!-- Actual app part -->
 
-      <iron-pages selected = "{{selected}}" attr-for-selected="name" class = "fit">
-        <!-- Show all tables -->
-        <database-tables name = "tables" connection = "{{connection}}"></database-tables>
-        <!-- Query the database -->
-        <mysql-test name = "query" database = "tsugi" multipleStatements></mysql-test>
-      </iron-pages>
+        <!-- This exposes the database connection to the rest of the elements -->
+        <sql-connection id = "sql" connection = "{{connection}}"
+                                   user = "{{user}}"
+                                   password = "{{password}}"
+                                   multipleStatements$="{{multipleStatements}}"
+                                   database = "{{database}}">
+                                   </sql-connection>
 
-    </paper-scroll-header-panel>
+        <!-- <app-settings settings = "{{settings}}"></app-settings> -->
+
+        <iron-pages selected = "{{selected}}" attr-for-selected="name" class = "fit">
+          <!-- Show all tables -->
+          <database-tables id = "tables" name = "tables"
+                                         connection = "{{connection}}"
+                                         database = "{{database}}">
+                                         </database-tables>
+          <!-- Query the database -->
+          <mysql-test id = "query" name = "query" connection = "{{connection}}"></mysql-test>
+        </iron-pages>
+
+      </paper-scroll-header-panel>
+
+    </paper-drawer-panel>
 
     <script>
-      var $scope = document.querySelector('#app');
-
+      // get the custom element
+      let $scope = document.querySelector('#app');
+      // Set which tab is selected
       $scope.selected = "tables";
-      // Expose the mysql connection established in mysql-test
-      $scope.connection = document.querySelector('mysql-test').getConnection();
+
+      // settings
+      // TODO: move this to an app-settings component
+      $scope.user = 'root';
+      $scope.password = 'root';
+      $scope.multipleStatements = false;
+
+      // Listen for the connected event
+      $scope.$.sql.addEventListener('connected', (e) => {
+        // Expose the mysql connection established in mysql-test
+        // Now all components have their connection element defined
+        $scope.connection = $scope.$.sql.getConnection();
+        // Log some info
+        console.log(`Connected to: ${e.detail.id}`);
+        // Get the databases
+        $scope.$.sql.connection.query('SHOW DATABASES', (err, rows, fields) => {
+          if (err) throw err;
+           // get all the databases
+          $scope.databases = getEntries(rows);
+          // set default database to the first one
+          $scope.database = $scope.databases[0];
+          // select the database in sql
+          $scope.$.sql.selectDatabase($scope.database);
+          // populate the tables in the tables tab
+          $scope.$.tables.getTables();
+        })
+      });
+
+      // select the correct database based on the selection
+      $scope.databaseSelected = function(e){
+        // change the database
+        $scope.$.sql.selectDatabase(e.model.db);
+        // update the settings bindings
+        $scope.database = e.model.db;
+      }
+
+      // helper function to get entries in result
+      function getEntries(rows){
+        let res = [];
+        for (row in rows){
+          res.push(rows[row]['Database']);
+        }
+        return res;
+      }
 
     </script>
 

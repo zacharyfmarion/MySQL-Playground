@@ -26,8 +26,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                                   visible-rows="10">
       <table>
         <!-- Define the columns and their mapping to data properties. -->
-        <col name="Tables_in_tsugi">
-
+        <col name = "table">
         <!-- Define the column headings. -->
         <thead>
           <tr>
@@ -51,6 +50,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           type: Object
         },
 
+        database: {
+          type: String,
+          observer: '_databaseChanged'
+        },
+
         rows: {
           type: Object
         },
@@ -61,25 +65,42 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       },
 
       attached: function(){
-        this.getTables();
+        // this.getTables();
       },
 
       getTables: function(){
         let _this = this;
         this.connection.query('SHOW TABLES', (err, rows, fields) => {
           if (err) throw err;
-          _this.rows = rows;
+          console.log(rows);
+          _this.rows = _this._encodeRowsAsObject(rows);
           _this.tables = _this._encodeRowsAsArray(rows);
         })
       },
 
       /* Private functions */
+
+      _databaseChanged: function(){
+        this.getTables();
+        this.$.dataTable.refreshItems();
+      },
+
+      _encodeRowsAsObject: function(rows){
+        let res = [];
+        for (let table of rows){
+          res.push({
+            table: table[`Tables_in_${this.database}`]
+          })
+        }
+        return res;
+      },
+
       _encodeRowsAsArray: function(rows){
         let res = [];
         // iterate over each row in the array
-        rows.forEach(({Tables_in_tsugi}) => {
-          res.push(Tables_in_tsugi);
-        })
+        for (let table of rows){
+          res.push(table[`Tables_in_${this.database}`]);  // only one prop so safe
+        }
         return res;
       }
 
