@@ -68,6 +68,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       margin: 0;
       height: calc(var(--toolbar-height) - 48px);
     }
+    paper-drawer-panel {
+      --paper-drawer-panel-left-drawer-container: {
+        box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.14),
+                    0 1px 8px 0 rgba(0, 0, 0, 0.12),
+                    0 3px 3px -2px rgba(0, 0, 0, 0.4);
+      };
+    }
     paper-tabs{
       background-color: var(--light-primary-color);
     }
@@ -88,7 +95,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <span id="browser-sync-binding"></span>
   <template is="dom-bind" id="app">
 
-    <paper-drawer-panel id = "drawerPanel" force-narrow>
+    <!-- Add force-narrow to alwas have drawer closed -->
+    <paper-drawer-panel id = "drawerPanel">
       <!-- Sidebar -->
       <paper-header-panel id = "sidePanel" drawer>
         <paper-toolbar id = "sideToolbar">
@@ -98,7 +106,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <paper-menu>
             <iron-selector selected = "{{selectedDB}}" attr-for-selected="db">
               <template is="dom-repeat" items = "[[databases]]" as = "db">
-                <paper-item db = "[[db]]" on-tap = "databaseSelected">[[db]]</paper-item>
+                <paper-item db = "[[db]]" on-tap = "databaseSelected">
+                  [[db]]
+                  <paper-ripple></paper-ripple>
+                </paper-item>
               </template>
             </iron-selector>
           </paper-menu>
@@ -134,6 +145,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         <!-- <app-settings settings = "{{settings}}"></app-settings> -->
 
+        <!-- Tabs of the application -->
         <iron-pages selected = "{{selected}}" attr-for-selected="name" class = "fit">
           <!-- Show all tables -->
           <database-tables id = "tables" name = "tables"
@@ -141,7 +153,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                                          database = "{{database}}">
                                          </database-tables>
           <!-- Query the database -->
-          <mysql-test id = "query" name = "query" connection = "{{connection}}"></mysql-test>
+          <sql-query id = "query" name = "query" connection = "{{connection}}"></sql-query>
         </iron-pages>
 
       </paper-scroll-header-panel>

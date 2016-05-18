@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <link rel="import" href="../../../www/lib/polymer/polymer.html">
 
-<dom-module id="mysql-test">
+<dom-module id="sql-query">
   <template>
     <style>
       :host {
@@ -42,6 +42,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       #close-btn{
         background-color: var(--default-primary-color);
         color: #fff;
+      }
+      .pink-button {
+        text-transform: none;
+        color: var(--accent-color);
       }
       .container{
         /*padding: 20px;*/
@@ -77,6 +81,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           </tfoot>
         </table>
       </vaadin-grid>
+
+      <!-- ERROR TOAST -->
+      <paper-toast id = "errorToast" duration="0" text = "{{error.message}}">
+        <paper-button onclick="errorToast.toggle()" class="pink-button">Dismiss</paper-button>
+      </paper-toast>
+
     </div>
 
   </template>
@@ -85,13 +95,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     'use strict';
 
     Polymer({
-      is: 'mysql-test',
+      is: 'sql-query',
 
       properties: {
         /* The query to be entered into the database */
         query: { type: String },
         /* Resuly of the query */
         resultStr: { type: String },
+        /* Error String */
+        error: { type: Object },
         /* Object containing the result rows */
         resultObj: { type: Object },
         /* Data columns */
@@ -123,7 +135,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       queryDatabase: function(query_str){
         var _this = this;
         this.connection.query(query_str, function(err, rows, fields) {
-          if (err) throw err;
+          if (err){
+            _this.error = err;
+            _this.$.errorToast.open();
+            throw err;
+          }
           _this.resultObj = rows;
           _this.resultFields = fields;
           _this.resultStr = JSON.stringify(rows, null, 4);
