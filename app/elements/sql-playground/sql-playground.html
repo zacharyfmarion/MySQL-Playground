@@ -1,0 +1,222 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../../../www/lib/polymer/polymer.html">
+
+<dom-module id="sql-playground">
+  <template>
+  <style is = "custom-style">
+    /* Fix the toolbar height */
+    #main-toolbar{
+      height: var(--toolbar-height);
+    }
+    @media (min-width: 601px){
+      #drawer.paper-drawer-panel > [drawer]:not([style-scope]):not(.style-scope){
+        border-right: 0;
+      }
+    }
+    #sideToolbar{
+      padding: 0;
+      margin: 0;
+      height: calc(var(--toolbar-height) - 48px);
+    }
+    paper-drawer-panel {
+      --paper-drawer-panel-left-drawer-container: {
+        box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.14),
+                    0 1px 8px 0 rgba(0, 0, 0, 0.12),
+                    0 3px 3px -2px rgba(0, 0, 0, 0.4);
+      };
+    }
+    paper-tabs{
+      background-color: var(--light-primary-color);
+    }
+    database-tables{
+      height: 100%;
+    }
+    iron-pages{
+      padding: 0;
+      background-color: var(--app-background-color);
+    }
+    paper-item{
+      cursor: pointer;
+    }
+  </style>
+
+    <!-- Add force-narrow to alwas have drawer closed -->
+    <paper-drawer-panel id = "drawerPanel" responsiveWidth = "1000px">
+      <!-- Sidebar -->
+      <paper-header-panel id = "sidePanel" drawer>
+        <paper-toolbar id = "sideToolbar">
+          <div class="title">Databases</div>
+        </paper-toolbar>
+        <paper-menu>
+          <paper-menu>
+            <iron-selector selected = "{{selectedDB}}" attr-for-selected="db">
+              <template is="dom-repeat" items = "[[databases]]" as = "db">
+                <paper-item db = "[[db]]" on-tap = "databaseSelected">
+                  [[db]]
+                  <paper-ripple></paper-ripple>
+                </paper-item>
+              </template>
+            </iron-selector>
+          </paper-menu>
+        </paper-menu>
+      </paper-header-panel>
+      <!-- Main app -->
+      <paper-scroll-header-panel class="flex" fixed main>
+        <paper-toolbar class = "medium-tall" id = "main-toolbar">
+
+          <paper-icon-button icon="menu" paper-drawer-toggle></paper-icon-button>
+          <div class="title">Mysql Playground - {{database}}</div>
+          <paper-icon-button icon="info"      on-click="showAbout"></paper-icon-button>
+          <paper-icon-button icon="refresh"   on-click="refresh"></paper-icon-button>
+          <paper-icon-button icon="more-vert" on-click=""></paper-icon-button>
+
+          <!-- Tabs bar -->
+          <paper-tabs class = "bottom fit" selected="{{selected}}" attr-for-selected="name">
+            <paper-tab name = "tables">Tables</paper-tab>
+            <paper-tab name = "query">Query</paper-tab>
+            <!-- <paper-tab name = "schema">Schema</paper-tab> -->
+          </paper-tabs>
+
+        </paper-toolbar>
+        <!-- Actual app part -->
+
+        <!-- This exposes the database connection to the rest of the elements -->
+        <sql-connection id = "sql" connection = "{{connection}}"
+                                   user = "{{user}}"
+                                   password = "{{password}}"
+                                   multipleStatements$="{{multipleStatements}}"
+                                   database = "{{database}}">
+                                   </sql-connection>
+
+        <!-- <app-settings settings = "{{settings}}"></app-settings> -->
+
+        <!-- Tabs of the application -->
+        <iron-pages selected = "{{selected}}" attr-for-selected="name" class = "fit">
+          <!-- Show all tables -->
+          <tables-tab id = "tables" name = "tables"
+                                         connection = "{{connection}}"
+                                         database = "{{database}}">
+                                       </tables-tab>
+          <!-- Query the database -->
+          <query-tab id = "query" name = "query" connection = "{{connection}}"></query-tab>
+        </iron-pages>
+
+      </paper-scroll-header-panel>
+
+    </paper-drawer-panel>
+
+  </template>
+  <script>
+  (function() {
+    'use strict';
+
+    Polymer({
+      is: 'sql-playground',
+
+      properties: {
+        /* Which tab is currently selected */
+        selected: {
+          type: String,
+          value: 'tables'
+        },
+
+        user: {
+          type: String,
+          value: 'root'
+        },
+
+        selectedDB: {
+          type: String
+        },
+
+        password: {
+          type: String,
+          value: 'root'
+        },
+
+        multipleStatements: {
+          type: Boolean,
+          value: false
+        },
+
+        databases: {
+          type: Array,
+          value: []
+        },
+
+        database: {
+          type: String
+        }
+      },
+
+      behaviors: [ SqlBehaviors.QueryBehavior ],
+
+      ready: function(){
+        let _this = this;
+        // Listen for the connected event
+        this.$.sql.connect().then((connection) => {
+          // Get the db connection
+          _this.connection = connection;
+          // Get all databases
+          _this.queryDatabase("SHOW DATABASES").then((rows, fields) => {
+            // populate the database prop with result information
+            _this._populateDatabases(rows);
+          // catch a query error
+          }).catch((err) => { throw err; });
+        // catch the connection error as well
+        }).catch((err) => { throw err; });
+
+        // // when a table is clicked open a query
+        // this.$.tables.addEventListener('table-clicked', (e) => {
+        //   console.log(e.detail.name);
+        // })
+
+      },
+
+      /* Handle a database being selected */
+      databaseSelected: function(e){
+        // change the database
+        this.$.sql.selectDatabase(e.model.db);
+        // update the settings bindings
+        this.database = e.model.db;
+        this.$.drawerPanel.closeDrawer();
+      },
+
+      /** Handle the execution of a query
+        * @param {String} query - SQL query string
+      **/
+      executeQuery: function(query){
+        // Query the database
+        this.$.query.updateEditorContents(query);
+        this.$.query.queryDatabase(query);
+        // select the query tab
+        this.selected = "query";
+      },
+
+      /* Handle recieving all the databases */
+      _populateDatabases: function(rows){
+        for (let i = 0; i < rows.length; i++){
+          this.push('databases', rows[i]['Database']);
+        }
+        // set default database to the first one
+        this.database = this.databases[0];
+        // select the database in sql
+        this.$.sql.selectDatabase(this.database);
+        // populate the tables in the tables tab
+        this.$.tables.getTables();
+      }
+
+
+    });
+  })();
+  </script>
+</dom-module>

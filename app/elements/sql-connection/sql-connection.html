@@ -68,7 +68,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       /* Run when the component is ready */
       ready: function(){
         this.createConnection();
-        this.connect(); // ??
       },
 
       /** Create the database connection */
@@ -80,11 +79,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           multipleStatements: _this.multipleStatements,
           socketPath : _this.socketPath
         });
-      },
-
-      /* Getter method exposing the connection object */
-      getConnection: function(){
-        return this.connection;
       },
 
       /** Select a new database for use
@@ -102,14 +96,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       connect: function(){
         let _this = this;
         // connect to the table
-        this.connection.connect(function(err) {
-          if (err) {
-            console.error('error connecting: ' + err.stack);
-            return;
-          }
-          console.log('connected as id ' + _this.connection.threadId);
-          // fire a custom event saying the connection has been established
-          _this.fire('connected', {id: _this.connection.threadId});
+        return new Promise((resolve, reject) => {
+          _this.connection.connect(function(err) {
+            if (err) reject(err);
+            resolve(_this.connection);
+          });
         });
       },
 

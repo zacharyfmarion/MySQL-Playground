@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <link rel="import" href="../../../www/lib/polymer/polymer.html">
 
-<dom-module id="sql-query">
+<dom-module id="query-tab">
   <template>
     <style>
       :host {
@@ -60,6 +60,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <paper-button id = "close-btn" on-click = "_closeConnection" raised>Close Connection</paper-button>
         </div>
       </div>
+
+
+
       <!-- Where the results of the query go -->
       <!-- <pre id = "result" class = "flex">[[resultStr]]</pre> -->
       <vaadin-grid id = "dataTable" class = "hidden" selection-mode="multi"
@@ -95,7 +98,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     'use strict';
 
     Polymer({
-      is: 'sql-query',
+      is: 'query-tab',
 
       properties: {
         /* The query to be entered into the database */
@@ -106,19 +109,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         error: { type: Object },
         /* Object containing the result rows */
         resultObj: { type: Object },
+        /* Result fields to be used as headers */
+        resultFields: { type: Array },
         /* Data columns */
         dataCols: {
           type: Array,
           value: () => {
             return []
           }
-        },
-        /* Result fields to be used as headers */
-        resultFields: { type: Array },
-        /* connection object created by mysql */
-        connection: { type: Object }
+        }
       },
 
+      /* behaviors to be applied to the element */
+      behaviors: [ SqlBehaviors.QueryBehavior ],
+
+      /* Execute when element is ready */
       ready: function(){
 
       },
@@ -126,25 +131,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       /* Run the actual query */
       runCommand: function(){
         this.query = this.$.editor.getValue();
-        this.queryDatabase(this.query);
-      },
-
-      /** Query the database (exposed as a public function)
-        * @param {String} The query to pass into the database
-      **/
-      queryDatabase: function(query_str){
-        var _this = this;
-        this.connection.query(query_str, function(err, rows, fields) {
-          if (err){
-            _this.error = err;
-            _this.$.errorToast.open();
-            throw err;
-          }
-          _this.resultObj = rows;
-          _this.resultFields = fields;
-          _this.resultStr = JSON.stringify(rows, null, 4);
-          _this._getDataCols();
+        let _this = this;
+        this.queryDatabase(this.query).then((rows, fields) => {
+          _this._handleNewQuery(rows, fields);
+        }).catch((err) => {
+          _this._handleErr(err);
         });
+
       },
 
       /* Set value of the editor */
@@ -152,6 +145,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this.$.editor.setValue(query);
       },
 
+      /* ------------- PRIVATE FUNCTIONS ------------ */
+
+      /* Format the data so that vaadin-grid can read it */
       _getDataCols: function(){
         if (this.resultObj){
           // remove previous cols
@@ -173,6 +169,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       /* close the db connection */
       _closeConnection: function(){
         this.connection.end();
+      },
+
+      /* handle a new query from the database */
+      _handleNewQuery: function(rows, fields){
+        this.resultObj = rows;
+        this.resultFields = fields;
+        this.resultStr = JSON.stringify(rows, null, 4);
+        this._getDataCols();
+      },
+
+      /* handle an error from the db query */
+      _handleErr: function(err){
+        this.error = err;
+        this.$.errorToast.open();
+        throw err;
       }
 
     });
